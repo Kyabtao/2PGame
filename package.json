@@ -1,0 +1,24 @@
+{
+  "name": "2pgame",
+  "version": "1.0.0",
+  "description": "100 local two-player browser games with a shared engine, hub and localStorage scoreboards. No build step, no runtime dependencies.",
+  "private": true,
+  "scripts": {
+    "start": "python3 -m http.server 8080 --bind 0.0.0.0",
+    "build": "node tools/build.js",
+    "test": "node tools/build.js && node tools/smoke.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Kyabtao/2PGame.git"
+  },
+  "keywords": ["games", "two-player", "local-multiplayer", "browser", "vanilla-js", "localstorage"],
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Kyabtao/2PGame/issues"
+  },
+  "homepage": "https://github.com/Kyabtao/2PGame#readme",
+  "devDependencies": {
+    "jsdom": "^24.1.3"
+  }
+}
