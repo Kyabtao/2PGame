@@ -32,8 +32,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        with:
-          node-version: 20
       # Manifest ↔ folders ↔ syntax check (fails the deploy if any game.js has a syntax error).
       - run: node tools/build.js
 
