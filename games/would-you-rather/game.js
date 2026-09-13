@@ -1,10 +1,10 @@
-/* Would You Rather — Pick A or B. Match your rival\ */
+/* Would You Rather — Pick A or B. Match your rival's choice to score a point. */
 (function () {
   let starter = 1;
   Game.init({
     id: 'would-you-rather',
     rules: [
-      'Pick A or B. Match your rival\',
+      'Pick A or B. Match your rival\'s choice to score a point.',
       'This is a pass-the-device game.',
       'Hand the device to your rival when the screen says so.'
     ],
