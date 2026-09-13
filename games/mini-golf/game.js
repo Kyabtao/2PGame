@@ -18,7 +18,7 @@
     controls: { all: 'Drag from the ball and release · <kbd>←</kbd>/<kbd>→</kbd> aim, <kbd>↑</kbd>/<kbd>↓</kbd> power, <kbd>Space</kbd> putt' },
     points: true,
     onStart(g) {
-      const { canvas, ctx } = UI.canvas(W, H); canvas.style.maxHeight = 'calc(100dvh - 240px)'; g.stage.appendChild(canvas);
+      const { canvas, ctx } = UI.canvas(W, H); g.stage.appendChild(canvas);
       const strokes = { 1: 0, 2: 0 }; const card = { 1: [], 2: [] };
       let hole = 0, turn = 1, balls = { 1: null, 2: null }, moving = false, done = { 1: false, 2: false }, holeStrokes = { 1: 0, 2: 0 }, aim = { ang: -Math.PI / 2, pow: 40 }, drag = null;
       const cur = () => balls[turn];

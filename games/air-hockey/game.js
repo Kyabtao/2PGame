@@ -8,7 +8,7 @@
     points: true,
     pad: [{ side: 1, dpad: { up: 'KeyW', down: 'KeyS', left: 'KeyA', right: 'KeyD' } }, { side: 2, dpad: { up: 'ArrowUp', down: 'ArrowDown', left: 'ArrowLeft', right: 'ArrowRight' } }],
     async onStart(g) {
-      const { canvas, ctx } = UI.canvas(W, H); canvas.style.maxHeight = 'calc(100dvh - 230px)'; g.stage.appendChild(canvas);
+      const { canvas, ctx } = UI.canvas(W, H); g.stage.appendChild(canvas);
       const score = { 1: 0, 2: 0 }; const MR = 28, PR = 18;
       const M = { 1: { x: W / 2, y: H - 100, vx: 0, vy: 0 }, 2: { x: W / 2, y: 100, vx: 0, vy: 0 } };
       const puck = { x: W / 2, y: H / 2, vx: 0, vy: 0 }; let pause = 0;

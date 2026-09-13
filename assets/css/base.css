@@ -31,10 +31,13 @@ body {
     radial-gradient(1200px 600px at 15% -10%, #1f2a55 0%, transparent 60%),
     radial-gradient(900px 500px at 110% 10%, #3a1f4f 0%, transparent 55%),
     var(--bg);
+  background-attachment: fixed;
   color: var(--text);
   font-family: var(--font);
   line-height: 1.4;
   -webkit-tap-highlight-color: transparent;
+  overscroll-behavior: none;
+  min-height: 100dvh;
 }
 a { color: inherit; }
 button { font: inherit; color: inherit; }
@@ -66,6 +69,8 @@ h1, h2, h3 { margin: 0; line-height: 1.2; }
   transition: transform .08s, background .15s, border-color .15s;
   user-select: none;
   white-space: nowrap;
+  touch-action: manipulation;
+  min-height: 38px;
 }
 .btn:hover { background: var(--surface3); }
 .btn:active { transform: translateY(1px) scale(.98); }
@@ -192,6 +197,7 @@ input.text:focus, select.select:focus { border-color: #5b7cfa; }
   justify-content: flex-start;
   gap: .8rem;
   min-height: 40vh;
+  overflow-x: auto;
 }
 body.passing .stage { visibility: hidden; }
 body.has-touch .stage { padding-bottom: 190px; }
@@ -269,19 +275,24 @@ body.has-touch .stage { padding-bottom: 190px; }
   justify-content: space-between;
   align-items: flex-end;
   padding: .6rem;
+  padding-bottom: calc(.6rem + env(safe-area-inset-bottom));
   gap: .5rem;
   z-index: 50;
   pointer-events: none;
   touch-action: none;
   user-select: none;
+  background: linear-gradient(rgba(14, 16, 32, 0) 0, rgba(14, 16, 32, .82) 28%);
 }
 .touchpad .pad { pointer-events: auto; display: flex; gap: .5rem; align-items: center; }
 .touchpad .dpad { display: grid; grid-template-columns: repeat(3, 52px); grid-template-rows: repeat(3, 52px); gap: 4px; }
 .touchpad .tbtn {
   width: 52px; height: 52px;
   border-radius: 12px;
-  background: rgba(36, 44, 71, .85);
+  background: rgba(36, 44, 71, .8);
   border: 1px solid var(--line);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, .35), inset 0 1px 0 rgba(255, 255, 255, .06);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
   color: var(--text);
   font-weight: 700;
   font-size: 1.1rem;
@@ -360,23 +371,28 @@ body.has-touch .stage { padding-bottom: 190px; }
 .piece.sm { width: 45%; height: 45%; }
 @keyframes drop { from { transform: translateY(-40%) scale(.8); opacity: 0; } to { transform: none; opacity: 1; } }
 
-/* ---------- Canvas ---------- */
+/* ---------- Canvas ----------
+   Width is derived from --cw / --cr (set by UI.canvas) so the aspect ratio
+   is ALWAYS preserved: the box is the largest size that fits both the
+   available width and the available height (minus chrome / touch pad). */
 .gcanvas {
   display: block;
-  max-width: 100%;
-  max-height: calc(100dvh - 240px);
   height: auto;
+  aspect-ratio: var(--cr, auto);
+  width: var(--cw, 100%); /* fallback when min()/dvh is unsupported */
+  width: min(100%, var(--cw, 100%), max(140px, calc((100dvh - 240px) * var(--cr, 1))));
   background: #0b0d18;
   border-radius: 12px;
   border: 1px solid var(--line);
   touch-action: none;
   image-rendering: auto;
 }
-body.has-touch .gcanvas { max-height: calc(100dvh - 400px); }
+body.has-touch .gcanvas {
+  width: min(100%, var(--cw, 100%), max(140px, calc((100dvh - 400px) * var(--cr, 1))));
+}
 .gsvg {
   display: block;
   max-width: 100%;
-  max-height: calc(100dvh - 240px);
   height: auto;
   border-radius: 12px;
   touch-action: manipulation;
@@ -428,7 +444,8 @@ body.has-touch .gcanvas { max-height: calc(100dvh - 400px); }
 .stat { display: flex; flex-direction: column; align-items: center; background: var(--bg2); border-radius: 10px; padding: .4rem .8rem; min-width: 80px; }
 .stat b { font-size: 1.3rem; }
 .stat span { font-size: .7rem; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
-.chip { display: inline-flex; align-items: center; gap: .3rem; padding: .35rem .7rem; border-radius: 999px; background: var(--surface2); border: 1px solid var(--line); cursor: pointer; font-size: .9rem; user-select: none; }
+.chip { display: inline-flex; align-items: center; gap: .3rem; padding: .35rem .7rem; border-radius: 999px; background: var(--surface2); border: 1px solid var(--line); cursor: pointer; font-size: .9rem; user-select: none; touch-action: manipulation; transition: transform .08s, background .15s, border-color .15s, color .15s; min-height: 32px; }
+.chip:active { transform: scale(.95); }
 .chip:hover { background: var(--surface3); }
 .chip.on { background: #5b7cfa; border-color: transparent; color: #fff; }
 .chip.p1.on { background: var(--p1); }
@@ -507,11 +524,58 @@ body.has-touch .gcanvas { max-height: calc(100dvh - 400px); }
   .topbar { padding: .5rem .6rem; }
   .topbar .title { font-size: 1.05rem; }
   .topbar .back span { display: none; }
-  .scoreboard { grid-template-columns: 1fr 1fr; padding: 0 .6rem; }
+  .scoreboard { grid-template-columns: 1fr 1fr; padding: 0 .6rem; gap: .45rem; }
   .scoreboard .mid { grid-column: 1 / -1; order: -1; min-width: 0; }
+  .scoreboard .status { font-size: .85rem; }
+  .scoreboard .points { font-size: 1.15rem; }
+  .scoreboard .draws { font-size: .7rem; }
+  .player { padding: .4rem .6rem; }
   .player .wins { font-size: 1.4rem; }
+  .player.active::after { top: -.6rem; }
   .stage { padding: 0 .6rem; margin: .7rem auto; }
   .split { grid-template-columns: 1fr; }
   .card { --cw: 52px; }
-  .modal { padding: 1.1rem 1rem 1rem; }
+  .hint { font-size: .75rem; gap: .8rem; padding: .4rem .6rem 1rem; }
+  .panel { padding: .9rem 1rem; }
+
+  /* Modals become bottom sheets — feels native on phones */
+  .overlay { align-items: flex-end; padding: 0; }
+  .modal {
+    width: 100%;
+    max-height: 88dvh;
+    border-radius: 18px 18px 0 0;
+    border-bottom: 0;
+    padding: 1rem 1rem calc(1.1rem + env(safe-area-inset-bottom));
+    animation: sheet .22s ease-out;
+  }
+  .modal::before {
+    content: "";
+    display: block;
+    width: 44px; height: 4px;
+    border-radius: 99px;
+    background: var(--line);
+    margin: 0 auto .5rem;
+  }
+  @keyframes sheet { from { transform: translateY(48%); opacity: .3; } to { transform: none; opacity: 1; } }
+}
+
+@media (max-width: 420px) {
+  .topbar { gap: .35rem; }
+  .topbar .btn.icon { width: 34px; height: 34px; font-size: .95rem; }
+  .topbar .btn.icon.back { padding: 0 .5rem; width: auto; }
+  .touchpad { padding: .45rem; gap: .35rem; }
+  .touchpad .pad { gap: .35rem; }
+  .touchpad .dpad { grid-template-columns: repeat(3, 46px); grid-template-rows: repeat(3, 46px); gap: 3px; }
+  .touchpad .tbtn { width: 46px; height: 46px; font-size: 1rem; border-radius: 10px; }
+  .touchpad .tbtn.wide { min-width: 70px; padding: 0 .55rem; }
+  .touchpad .tbtn.huge { max-width: 150px; height: 72px; font-size: 1.1rem; }
+  .player .pname { font-size: .95rem; }
+  body.has-touch .stage { padding-bottom: 160px; }
+  body.has-touch .gcanvas {
+    width: min(100%, var(--cw, 100%), max(140px, calc((100dvh - 380px) * var(--cr, 1))));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }

@@ -7,7 +7,7 @@
     controls: { all: 'Drag from the ball & release · <kbd>←</kbd>/<kbd>→</kbd> aim · <kbd>Z</kbd>/<kbd>X</kbd> spin · <kbd>Space</kbd> roll' },
     points: true,
     onStart(g) {
-      const { canvas, ctx } = UI.canvas(W, H); canvas.style.maxHeight = 'calc(100dvh - 250px)'; g.stage.appendChild(canvas);
+      const { canvas, ctx } = UI.canvas(W, H); g.stage.appendChild(canvas);
       const P = { 1: mkPlayer(), 2: mkPlayer() }; let turn = 1, pins, ball = null, aim = { x: 0, spin: 0, pow: 70 }, drag = null;
       function mkPlayer() { return { rolls: [], frame: 0, sub: 0, standing: 10, done: false }; }
       const PIN = (() => { const out = []; const rows = [[0], [-1, 1], [-2, 0, 2], [-3, -1, 1, 3]]; rows.forEach((r, i) => r.forEach((x) => out.push({ x: W / 2 + x * 16, y: 90 - i * 24 }))); return out; })();

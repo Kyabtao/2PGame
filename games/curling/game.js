@@ -7,7 +7,7 @@
     controls: { all: 'Drag from the stone and release to throw · or <kbd>←</kbd>/<kbd>→</kbd> aim, <kbd>↑</kbd>/<kbd>↓</kbd> power, <kbd>Space</kbd> throw' },
     points: true,
     onStart(g) {
-      const { canvas, ctx } = UI.canvas(W, H); canvas.style.maxHeight = 'calc(100dvh - 240px)'; g.stage.appendChild(canvas);
+      const { canvas, ctx } = UI.canvas(W, H); g.stage.appendChild(canvas);
       const total = { 1: 0, 2: 0 }; let end = 1, thrown = 0, turn = 1, stones = [], moving = false, aim = { ang: 0, pow: 60, curl: 0 }, drag = null, hammer = 2;
       const curlEl = h('input', { type: 'range', min: -10, max: 10, value: 0, style: { width: '140px' } }); curlEl.addEventListener('input', () => { aim.curl = +curlEl.value; });
       const throwBtn = h('button', { class: 'btn primary', text: 'Throw (Space)', onclick: () => shoot() });
