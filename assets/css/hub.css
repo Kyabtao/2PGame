@@ -14,6 +14,12 @@
 .hub-header .brand h1 { font-size: clamp(1.8rem, 5vw, 2.6rem); letter-spacing: -.02em; }
 .hub-header .brand h1 span { background: linear-gradient(90deg, var(--p1), var(--p2)); -webkit-background-clip: text; background-clip: text; color: transparent; }
 .hub-header .brand p { margin: .2rem 0 0; color: var(--muted); }
+.hub-header .brand .mobile-hint {
+  margin: .3rem 0 0;
+  font-size: .85rem;
+  color: var(--green);
+  font-weight: 600;
+}
 .players-card {
   background: var(--surface);
   border: 1px solid var(--line);
@@ -99,6 +105,38 @@
 .gcard .fav:hover, .gcard .fav.on { opacity: 1; }
 .gcard .lead { position: absolute; left: .7rem; bottom: .55rem; width: 6px; height: 6px; border-radius: 50%; display: none; }
 .gcard.new::before { content: "PLAY"; position: absolute; right: .7rem; bottom: .7rem; font-size: .65rem; letter-spacing: .1em; color: #5b7cfa; font-weight: 700; }
+.gcard .mobile-badge {
+  position: absolute;
+  bottom: .55rem;
+  left: .7rem;
+  font-size: .6rem;
+  letter-spacing: .06em;
+  color: var(--green);
+  background: color-mix(in srgb, var(--green) 15%, transparent);
+  padding: .1rem .4rem;
+  border-radius: 999px;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+.gcard .mobile-badge.kb-badge {
+  color: var(--orange);
+  background: color-mix(in srgb, var(--orange) 15%, transparent);
+}
+.gcard.needs-kb {
+  opacity: .7;
+}
+.gcard.needs-kb:hover {
+  opacity: 1;
+}
+.gcard .mode.mode-kb {
+  color: var(--orange);
+}
+.mode-sep {
+  color: var(--line);
+  padding: 0 .3rem;
+  font-size: 1.1rem;
+  user-select: none;
+}
 .empty { text-align: center; color: var(--muted); padding: 3rem 1rem; }
 
 .hub-footer { max-width: 1200px; margin: 2rem auto 3rem; padding: 0 1rem; color: var(--muted); font-size: .85rem; display: flex; gap: 1rem; flex-wrap: wrap; align-items: center; justify-content: space-between; }
@@ -121,4 +159,8 @@
   .games { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
   .gcard { min-height: 130px; padding: .7rem .7rem .6rem; }
   .gcard .ds { display: none; }
+  .gcard .mobile-badge { font-size: .55rem; padding: .05rem .35rem; bottom: .45rem; }
+  .mode-sep { display: none; }
+  .toolbar .cats { gap: .25rem; }
+  .toolbar .chip { font-size: .75rem; padding: .25rem .5rem; }
 }

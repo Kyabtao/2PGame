@@ -8,9 +8,18 @@
   const CATS = window.GAME_CATEGORIES;
   const $ = (s) => document.querySelector(s);
   const MODE = { turn: 'Turn based', live: 'Real time', pass: 'Pass device', race: 'Side by side' };
+  const MODE_EMOJI = { turn: '🔄', pass: '📱', race: '🏁', live: '⚡' };
+  const MODE_ORDER = { turn: 0, pass: 1, race: 2, live: 3 };
+  const MODE_SECTIONS = [
+    { mode: 'turn', title: '🔄 Turn-Based Games', desc: 'Perfect for mobile — tap to play' },
+    { mode: 'pass', title: '📱 Pass-the-Device', desc: 'Great for mobile — hide and pass' },
+    { mode: 'race', title: '🏁 Side-by-Side', desc: 'Split screen — touch friendly' },
+    { mode: 'live', title: '⚡ Real-Time Games', desc: 'Best with a keyboard — fast reflexes needed' },
+  ];
 
   let names = Store.players();
   let filter = Store.get('hub:filter', 'all');
+  let modeFilter = Store.get('hub:mode', 'all');
   let query = '';
   let favs = new Set(Store.get('hub:favs', []));
 
@@ -48,24 +57,47 @@
   const catsEl = $('#cats');
   function renderCats() {
     catsEl.innerHTML = '';
-    const mk = (id, label, n) => {
-      const c = h('button', { class: 'chip' + (filter === id ? ' on' : ''), html: `${label} <span class="n">${n}</span>` });
-      c.addEventListener('click', () => { filter = id; Store.set('hub:filter', id); renderCats(); renderGames(); });
+    const mk = (id, label, n, isMode) => {
+      const active = isMode ? modeFilter === id : filter === id;
+      const c = h('button', { class: 'chip' + (active ? ' on' : ''), html: `${label} <span class="n">${n}</span>` });
+      c.addEventListener('click', () => {
+        if (isMode) {
+          modeFilter = id;
+          Store.set('hub:mode', id);
+        } else {
+          filter = id;
+          Store.set('hub:filter', id);
+        }
+        renderCats(); renderGames();
+      });
       catsEl.appendChild(c);
     };
     mk('all', '🎮 All', GAMES.length);
     mk('fav', '★ Favourites', favs.size);
     mk('played', '🕹️ Played', Object.values(Store.allScores()).filter((s) => s.n).length);
     CATS.forEach((c) => mk(c.id, `${c.emoji} ${c.name}`, GAMES.filter((g) => g.cat === c.id).length));
+    // Mode filter chips (divider + mode buttons)
+    catsEl.appendChild(h('span', { class: 'mode-sep', text: '│' }));
+    ['turn', 'pass', 'race', 'live'].forEach((m) => {
+      const count = GAMES.filter((g) => g.mode === m).length;
+      mk(m, `${MODE_EMOJI[m]} ${MODE[m]}`, count, true);
+    });
   }
 
   function card(g, all) {
     const s = all[g.id];
-    const a = h('a', { class: 'gcard' + (s && s.n ? '' : ' new'), href: `games/${g.id}/index.html` },
-      h('span', { class: 'mode', text: MODE[g.mode] || g.mode }),
+    const isMobile = g.mobile !== false;
+    const cls = 'gcard' + (s && s.n ? '' : ' new') + (!isMobile ? ' needs-kb' : '');
+    const a = h('a', { class: cls, href: `games/${g.id}/index.html` },
+      h('span', { class: 'mode' + (!isMobile ? ' mode-kb' : ''), text: isMobile ? (MODE[g.mode] || g.mode) : '⌨️ Keyboard' }),
       h('div', { class: 'em', text: g.emoji }),
       h('div', { class: 'nm', text: g.title }),
       h('div', { class: 'ds', text: g.desc }));
+    if (isMobile) {
+      a.appendChild(h('span', { class: 'mobile-badge', text: '📱 Mobile OK' }));
+    } else {
+      a.appendChild(h('span', { class: 'mobile-badge kb-badge', text: '⌨️ Needs keyboard' }));
+    }
     if (s && s.n) {
       a.appendChild(h('div', { class: 'sc' }, h('b', { class: 'a', text: s.w[0] }), h('span', { class: 'muted', text: '–' }), h('b', { class: 'b', text: s.w[1] }), s.d ? h('span', { class: 'muted', text: `(${s.d} draw${s.d > 1 ? 's' : ''})` }) : null, h('span', { class: 'g', text: `${s.n} played` })));
     }
@@ -88,16 +120,40 @@
       if (filter === 'fav' && !favs.has(g.id)) return false;
       if (filter === 'played' && !(all[g.id] && all[g.id].n)) return false;
       if (filter !== 'all' && filter !== 'fav' && filter !== 'played' && g.cat !== filter) return false;
+      if (modeFilter !== 'all' && g.mode !== modeFilter) return false;
       if (q && !(g.title + ' ' + g.desc + ' ' + g.cat + ' ' + (MODE[g.mode] || '')).toLowerCase().includes(q)) return false;
       return true;
     });
     listEl.innerHTML = '';
     if (!games.length) { listEl.appendChild(h('div', { class: 'empty' }, 'No games match. Try another search or category.')); return; }
-    const groups = filter === 'all' || filter === 'fav' || filter === 'played' ? CATS : CATS.filter((c) => c.id === filter);
-    groups.forEach((c) => {
-      const gs = games.filter((g) => g.cat === c.id);
+
+    // If a specific mode is selected, group by mode (turn first, live last)
+    if (modeFilter !== 'all') {
+      const ms = MODE_SECTIONS.find((m) => m.mode === modeFilter);
+      const gs = games.sort((a, b) => {
+        if (a.cat !== b.cat) return CATS.findIndex((c) => c.id === a.cat) - CATS.findIndex((c) => c.id === b.cat);
+        return a.title.localeCompare(b.title);
+      });
+      const sec = h('section', { class: 'section' }, h('h2', {}, ms.title, h('span', { class: 'n', text: `· ${ms.desc}` })));
+      const grid = h('div', { class: 'games' });
+      gs.forEach((g) => grid.appendChild(card(g, all)));
+      sec.appendChild(grid);
+      listEl.appendChild(sec);
+      return;
+    }
+
+    // For "all" view: group by mode (turn → pass → race → live), then by category within each mode
+    const groups = filter === 'all' || filter === 'fav' || filter === 'played' ? MODE_SECTIONS : MODE_SECTIONS;
+    groups.forEach((ms) => {
+      let gs = games.filter((g) => g.mode === ms.mode);
       if (!gs.length) return;
-      const sec = h('section', { class: 'section' }, h('h2', {}, `${c.emoji} ${c.name}`, h('span', { class: 'n', text: `${gs.length} game${gs.length > 1 ? 's' : ''}` })));
+      // Within the mode, sort by category then title
+      gs.sort((a, b) => {
+        const ci = CATS.findIndex((c) => c.id === a.cat) - CATS.findIndex((c) => c.id === b.cat);
+        return ci !== 0 ? ci : a.title.localeCompare(b.title);
+      });
+      const sec = h('section', { class: 'section' },
+        h('h2', {}, ms.title, h('span', { class: 'n', text: `· ${ms.desc} · ${gs.length} game${gs.length > 1 ? 's' : ''}` })));
       const grid = h('div', { class: 'games' });
       gs.forEach((g) => grid.appendChild(card(g, all)));
       sec.appendChild(grid);
@@ -111,7 +167,14 @@
   window.addEventListener('keydown', (e) => { if (e.key === '/' && document.activeElement !== search && !/INPUT/.test(document.activeElement.tagName)) { e.preventDefault(); search.focus(); } });
 
   /* ---- random game ---- */
-  $('#random').addEventListener('click', () => { const g = GAMES[Math.floor(Math.random() * GAMES.length)]; location.href = `games/${g.id}/index.html`; });
+  $('#random').addEventListener('click', () => {
+    // Prefer turn-based games for random pick on mobile
+    const pool = window.matchMedia('(pointer: coarse)').matches
+      ? GAMES.filter((g) => g.mobile !== false)
+      : GAMES;
+    const g = pool[Math.floor(Math.random() * pool.length)];
+    location.href = `games/${g.id}/index.html`;
+  });
 
   /* ---- history / reset ---- */
   function modal(title, bodyEl, buttons) {
