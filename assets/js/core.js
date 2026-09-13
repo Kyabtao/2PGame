@@ -228,8 +228,16 @@
     /** Board grid. opts: {rows, cols, size(px), gap, checker, onClick(r,c,el,ev), cls} */
     grid(opts) {
       const { rows, cols } = opts;
-      const size = opts.size || Math.floor(clamp(Math.min((global.innerWidth - 40) / cols, (global.innerHeight - 260) / rows), 26, 72));
-      const el = h('div', { class: 'grid ' + (opts.cls || ''), style: { gridTemplateColumns: `repeat(${cols}, ${size}px)`, '--cell': size + 'px', gap: (opts.gap == null ? 4 : opts.gap) + 'px' } });
+      // Fit the board to the viewport: account for gaps + grid padding, and
+      // allow smaller cells on phones (min 15px) so wide boards (15×15 etc.)
+      // never overflow horizontally.
+      let gap = opts.gap == null ? 4 : opts.gap;
+      const fit = (gp) => Math.min(
+        (global.innerWidth - 24 - 12 - (cols - 1) * gp) / cols,
+        (global.innerHeight - 300 - 12 - (rows - 1) * gp) / rows);
+      if (opts.gap == null && fit(gap) < 20) gap = 2;
+      const size = opts.size || Math.floor(clamp(fit(gap), 15, 72));
+      const el = h('div', { class: 'grid ' + (opts.cls || ''), style: { gridTemplateColumns: `repeat(${cols}, ${size}px)`, '--cell': size + 'px', gap: gap + 'px' } });
       const cells = [];
       for (let r = 0; r < rows; r++) {
         cells.push([]);
@@ -291,7 +299,10 @@
       const canvas = h('canvas', { class: 'gcanvas ' + (opts.cls || '') });
       canvas.width = Math.round(w * dpr);
       canvas.height = Math.round(hgt * dpr);
-      canvas.style.width = w + 'px';
+      // CSS (.gcanvas) sizes the box from --cw / --cr with min() so the
+      // aspect ratio is always preserved, no matter the screen or pad state.
+      canvas.style.setProperty('--cw', w + 'px');
+      canvas.style.setProperty('--cr', (w / hgt).toFixed(4));
       canvas.style.aspectRatio = `${w} / ${hgt}`;
       const ctx = canvas.getContext('2d');
       if (ctx && ctx.scale) ctx.scale(dpr, dpr);

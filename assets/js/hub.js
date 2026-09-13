@@ -87,7 +87,7 @@
   function card(g, all) {
     const s = all[g.id];
     const isMobile = g.mobile !== false;
-    const cls = 'gcard' + (s && s.n ? '' : ' new') + (!isMobile ? ' needs-kb' : '');
+    const cls = `gcard cat-${g.cat}` + (s && s.n ? '' : ' new') + (!isMobile ? ' needs-kb' : '');
     const a = h('a', { class: cls, href: `games/${g.id}/index.html` },
       h('span', { class: 'mode' + (!isMobile ? ' mode-kb' : ''), text: isMobile ? (MODE[g.mode] || g.mode) : '⌨️ Keyboard' }),
       h('div', { class: 'em', text: g.emoji }),
@@ -163,6 +163,14 @@
 
   /* ---- search ---- */
   const search = $('#search');
+  if (window.matchMedia && window.matchMedia('(pointer: coarse)').matches) {
+    search.placeholder = 'Search games…';
+    const hint = $('.mobile-hint');
+    if (hint) hint.hidden = false;
+  } else {
+    const hint = $('.mobile-hint');
+    if (hint) hint.hidden = true;
+  }
   search.addEventListener('input', () => { query = search.value; renderGames(); });
   window.addEventListener('keydown', (e) => { if (e.key === '/' && document.activeElement !== search && !/INPUT/.test(document.activeElement.tagName)) { e.preventDefault(); search.focus(); } });
 
@@ -218,6 +226,8 @@
 
   /* ---- boot ---- */
   $('#count').textContent = GAMES.length;
+  listEl.classList.add('boot'); // entrance animation on first paint only
   renderSummary(); renderCats(); renderGames();
+  setTimeout(() => listEl.classList.remove('boot'), 1000);
   window.addEventListener('pageshow', () => { renderSummary(); renderCats(); renderGames(); });
 })();
