@@ -6,13 +6,21 @@
   "scripts": {
     "start": "python3 -m http.server 8080 --bind 0.0.0.0",
     "build": "node tools/build.js",
-    "test": "node tools/build.js && node tools/smoke.js"
+    "test": "node tools/build.js && node tools/check-stubs.js && node tools/smoke.js",
+    "playtest": "node tools/playtest.js"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Kyabtao/2PGame.git"
   },
-  "keywords": ["games", "two-player", "local-multiplayer", "browser", "vanilla-js", "localstorage"],
+  "keywords": [
+    "games",
+    "two-player",
+    "local-multiplayer",
+    "browser",
+    "vanilla-js",
+    "localstorage"
+  ],
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/Kyabtao/2PGame/issues"

@@ -1,12 +1,13 @@
-# 2PGame — 100 two-player browser games
+# 2PGame — 189 two-player browser games
 
-One hundred local two-player games (same device, same keyboard or touch screen) built with plain HTML, CSS and JavaScript. No frameworks, no build step, no network calls — open `index.html` and play. Every game keeps a persistent scoreboard in the browser's `localStorage`.
+One hundred and eighty-nine local two-player games (same device, same keyboard or touch screen) built with plain HTML, CSS and JavaScript. No frameworks, no build step, no network calls — open `index.html` and play. Every game keeps a persistent scoreboard in the browser's `localStorage`.
 
-- **100 games** across five categories: board & strategy, arcade & action, sports & reflex, cards & dice, brain & party.
+- **189 games** across five categories: board & strategy, arcade & action, sports & reflex, cards & dice, brain & party.
 - **Interactive screen for every game** — canvas action games, SVG boards, DOM card tables, with keyboard *and* touch controls (an on-screen pad appears on phones/tablets).
 - **Scores saved in the browser** — series wins, draws, streaks, personal bests and match history, all per game, all in `localStorage`. Nothing leaves the device.
+- **Fullscreen play** — every game's top bar has an **⛶** button that expands the game to the full screen (it flips to 🗗 to leave); unsupported browsers simply don't show it.
 - **Everything connected** — a hub (`index.html`) lists, searches and filters all games; every game links back to the hub; player names set once are used everywhere.
-- **Shared assets** — one design system (`assets/css/base.css`) and one game engine (`assets/js/core.js`) power all 100 games. A typical game is a single ~60–150 line `game.js`.
+- **Shared assets** — one design system (`assets/css/base.css`) and one game engine (`assets/js/core.js`) power all 189 games. A typical game is a single ~60–150 line `game.js`.
 
 ## Quick start
 
@@ -29,7 +30,7 @@ Then open <http://localhost:8080/>. Type both player names once on the hub, pick
 
 ```
 2PGame/
-├── index.html                # Hub: player names, stats, search/filter, list of all 100 games
+├── index.html                # Hub: player names, stats, search/filter, list of all 189 games
 ├── README.md
 ├── package.json              # Optional: npm scripts (start/build/test) + jsdom for the smoke test
 ├── .gitignore
@@ -40,7 +41,7 @@ Then open <http://localhost:8080/>. Type both player names once on the hub, pick
 │   │   └── hub.css           # Hub-only styles
 │   └── js/
 │       ├── core.js           # Game engine: Game.init(), Store (localStorage), Sfx, Input, UI helpers
-│       ├── games.js          # Manifest of all 100 games (id, title, emoji, category, description)
+│       ├── games.js          # Manifest of all 189 games (id, title, emoji, category, description)
 │       └── hub.js            # Hub logic: filtering, search, favourites, stats, history/export, reset
 ├── games/                    # One folder per game (100 folders)
 │   ├── tic-tac-toe/
@@ -144,7 +145,8 @@ Turn-based games are played with the mouse or by tapping. Hidden-information gam
 ```bash
 npm install          # only needed for the smoke test (installs jsdom)
 npm run build        # regenerate game shells, report missing/orphan games and syntax errors
-npm test             # build check + headless smoke test of all 100 games (~10 minutes)
+npm test             # build + stub guard + headless smoke test of all 189 games
+npm run playtest     # bot-driven “actually play every game” harness (jsdom)
 node tools/smoke.js chess pong   # smoke-test specific games; VERBOSE=1 for console output
 ```
 
@@ -173,7 +175,120 @@ Notes:
 
 Any evergreen browser (Chrome, Edge, Firefox, Safari — desktop and mobile). Uses ES2020, CSS custom properties, `color-mix()`, Pointer Events and the Web Audio API for sound (sound can be muted from the top bar).
 
-## All 100 games
+## New in this release — 89 fully-implemented games
+
+Every former placeholder game now ships complete, real two-player rules that always reach a recorded win/draw/loss (enforced by `tools/check-stubs.js`, wired into `npm test`).
+
+### ♟️ Board & Strategy — 23 games
+
+| Game | Folder | Rules |
+|------|--------|-------|
+| **Arrow Maze** | [`games/arrow-maze/`](games/arrow-maze/) | Rotate arrow tiles to guide your token to the goal first. |
+| **Blind Chess** | [`games/chess-blind/`](games/chess-blind/) | Call out moves without seeing the board. Checkmate to win. |
+| **Blind Connect Four** | [`games/connect-four-blind/`](games/connect-four-blind/) | Drop discs blind. Only reveals when someone claims four. |
+| **Diagonals** | [`games/diagonals/`](games/diagonals/) | Connect opposite corners with a diagonal path. Block to win. |
+| **Dots Extreme** | [`games/dots-extreme/`](games/dots-extreme/) | Dots & Boxes on a bigger grid with power-ups and bonus boxes. |
+| **Fortress** | [`games/fortress/`](games/fortress/) | Build walls around your base. Destroy the enemy keep to win. |
+| **Four Corners** | [`games/four-corners/`](games/four-corners/) | Claim corners and edges. Control the most zones to win. |
+| **Gem Collector** | [`games/gem-collector/`](games/gem-collector/) | Collect gems on a grid. Rarer gems are worth more points. |
+| **Grid Lock** | [`games/grid-lock/`](games/grid-lock/) | Block paths and trap your rival. Cut off all exits to win. |
+| **Hex-a-Gone** | [`games/hex-a-gone/`](games/hex-a-gone/) | Remove hex tiles to trap your opponent. No moves left = lose. |
+| **Leap Frog** | [`games/leap-frog/`](games/leap-frog/) | Jump your pieces over opponents. Last one with moves wins. |
+| **Path Finder** | [`games/path-finder/`](games/path-finder/) | Build connected paths across the board. First to link two sides. |
+| **Quantum Tic-Tac-Toe** | [`games/quantum-tic-tac-toe/`](games/quantum-tic-tac-toe/) | Marks are in superposition until entangled. Collapse to win. |
+| **Reversi Blitz** | [`games/reversi-blitz/`](games/reversi-blitz/) | Fast Othello on a smaller board. Fewer moves, same flips. |
+| **Slither** | [`games/slither/`](games/slither/) | Grow your snake path on the board. Block the rival and win. |
+| **SOS** | [`games/sos/`](games/sos/) | Write S or O on a grid. Form SOS to score and go again. |
+| **Square Off** | [`games/square-off/`](games/square-off/) | Form squares of any size on a dot grid. Bigger squares score more. |
+| **Square Tactics** | [`games/square-tactics/`](games/square-tactics/) | Place squares of different sizes. No overlaps allowed. Last to place wins. |
+| **Star Battle** | [`games/star-battle/`](games/star-battle/) | Place stars on a grid. Two stars per row, column and zone. |
+| **Territory** | [`games/territory/`](games/territory/) | Claim regions by surrounding them. Go-style scoring wins. |
+| **Blind Tic-Tac-Toe** | [`games/tic-tac-toe-blind/`](games/tic-tac-toe-blind/) | Place marks without seeing the board. Reveal at the end. |
+| **Tile Domination** | [`games/tile-domination/`](games/tile-domination/) | Place tiles to claim territory. Most area at the end wins. |
+| **Tower Stacker** | [`games/tower-stacker/`](games/tower-stacker/) | Stack blocks on a shrinking base. Topple it and you lose. |
+
+### 🏃 Sports & Reflex — 14 games
+
+| Game | Folder | Rules |
+|------|--------|-------|
+| **Archery** | [`games/archery/`](games/archery/) | Aim for the bullseye. Wind shifts each round. Ten arrows each. |
+| **Axe Throw** | [`games/axe-throw/`](games/axe-throw/) | Aim and time the throw. Hit the bullseye for max points. |
+| **Bean Bag Toss** | [`games/bean-bag-toss/`](games/bean-bag-toss/) | Toss bags at the hole. On the board = 1 pt, in = 3 pts. |
+| **9-Ball Pool** | [`games/billiards-9ball/`](games/billiards-9ball/) | Sink balls in order from 1 to 9. Pot the 9 to win the rack. |
+| **Bocce** | [`games/bocce-balls/`](games/bocce-balls/) | Roll balls closest to the pallino. Knock rivals away to steal. |
+| **Carrom** | [`games/carrom/`](games/carrom/) | Flick the striker to pocket coins. First to clear your set. |
+| **Crokinole** | [`games/crokinole/`](games/crokinole/) | Flick discs to score. Knock the opponent off the board. |
+| **Disc Golf** | [`games/disc-golf/`](games/disc-golf/) | Flick discs at targets across nine holes. Fewest tosses wins. |
+| **Frisbee Golf** | [`games/frisbee-golf/`](games/frisbee-golf/) | Nine scenic holes. Avoid trees and water. Fewest throws wins. |
+| **Golf Putt** | [`games/golf-putt/`](games/golf-putt/) | Putt across nine tricky greens. Walls, slopes and bumpers. |
+| **Horseshoes** | [`games/horseshoes/`](games/horseshoes/) | Aim at the stake. Ringers are worth big points. Four rounds. |
+| **Ring Toss** | [`games/ring-toss/`](games/ring-toss/) | Aim and toss rings at pegs. Different pegs, different points. |
+| **Shuffleboard** | [`games/shuffleboard/`](games/shuffleboard/) | Slide pucks down the table. Highest score zone wins the round. |
+| **Slingshot** | [`games/slingshot/`](games/slingshot/) | Pull back, aim and release. Hit moving targets for bonus. |
+
+### 🃏 Cards & Dice — 28 games
+
+| Game | Folder | Rules |
+|------|--------|-------|
+| **Balut** | [`games/balut/`](games/balut/) | Five dice, four rounds per category. Twenty categories to fill. |
+| **Beetle** | [`games/beetle/`](games/beetle/) | Roll to draw body parts. Must roll a 6 for the body first. |
+| **Coup** | [`games/coup/`](games/coup/) | Bluff about your roles. Assassinate, steal and coup to win. |
+| **Cribbage** | [`games/cribbage/`](games/cribbage/) | Score pairs, runs and 15s. Peg to 121 on the virtual board. |
+| **Dominoes** | [`games/dominoes/`](games/dominoes/) | Match pips and empty your hand. Block your rival to score. |
+| **Dominoes Pass** | [`games/dominoes-pass/`](games/dominoes-pass/) | Hidden domino hands. Match pips, block your rival. Pass to hide. |
+| **Drop Dead** | [`games/drop-dead/`](games/drop-dead/) | Roll five dice. 2s and 5s kill your turn. Highest total wins. |
+| **Euchre** | [`games/euchre/`](games/euchre/) | Trump-based trick-taking. Win three tricks to take the hand. |
+| **51st State** | [`games/fifty-one/`](games/fifty-one/) | Reach exactly 51 with card values. Bust and lose your turn. |
+| **Fives** | [`games/fives-dice/`](games/fives-dice/) | Roll five dice. Keep 5s and re-roll. Most 5s after six rounds wins. |
+| **Gin Rummy** | [`games/gin-rummy/`](games/gin-rummy/) | Form melds and knock. Undercut or go gin for big points. |
+| **Gin Rummy Pass** | [`games/gin-rummy-pass/`](games/gin-rummy-pass/) | Classic rummy with hidden hands. Knock or go gin to win. |
+| **Hearts** | [`games/hearts/`](games/hearts/) | Avoid hearts and the queen of spades. Shoot the moon to flip. |
+| **Liar's Poker** | [`games/liars-poker/`](games/liars-poker/) | Bid on hidden digits in serial numbers. Call the bluff to flip. |
+| **Love Letter** | [`games/love-letter/`](games/love-letter/) | Bluff and deduce with 8 cards. Get closest to the princess. |
+| **Memory Theft** | [`games/memory-theft/`](games/memory-theft/) | Steal cards from your rival by remembering their positions. |
+| **No Thanks** | [`games/no-thanks/`](games/no-thanks/) | Take a card or pay a chip. Lowest score after the deck wins. |
+| **Oh Hell** | [`games/oh-hell/`](games/oh-hell/) | Bid on tricks. Hit your number exactly or lose points. |
+| **Poker Showdown** | [`games/poker-showdown/`](games/poker-showdown/) | Five-card draw. Bet, bluff and showdown. Pass to hide hands. |
+| **President** | [`games/president/`](games/president/) | Be first to empty your hand. President trades with the bum. |
+| **Rummy** | [`games/rummy/`](games/rummy/) | Form sets and runs. Discard to go out. Deadwood points lose. |
+| **Sequence** | [`games/sequence/`](games/sequence/) | Play cards, place chips. Get five in a row on the board. |
+| **Ship Captain Crew** | [`games/ship-captain-crew/`](games/ship-captain-crew/) | Roll 6, 5, 4 first, then score with remaining dice. Three tries. |
+| **Spades** | [`games/spades/`](games/spades/) | Bid tricks with a partner. Spades are always trump. |
+| **Sushi Go** | [`games/sushi-go/`](games/sushi-go/) | Draft sushi cards. Score the best combos over three rounds. |
+| **Threes** | [`games/threes-dice/`](games/threes-dice/) | Roll and keep 3s. Lowest total of other dice wins each round. |
+| **War Pass** | [`games/war-pass/`](games/war-pass/) | Classic war with hidden decks. Pass device between flips. |
+| **Yahtzee** | [`games/yahtzee/`](games/yahtzee/) | Five dice, three rolls, thirteen categories. Fill them all to win. |
+
+### 🧠 Brain & Party — 24 games
+
+| Game | Folder | Rules |
+|------|--------|-------|
+| **Anagram Battle** | [`games/anagram-battle/`](games/anagram-battle/) | Unscramble the letters. Longer words score more. |
+| **Charades** | [`games/charades/`](games/charades/) | Act out the word without speaking. Rival guesses to score. |
+| **Cipher Break** | [`games/cipher-break/`](games/cipher-break/) | Decode the secret message letter by letter. Fewer guesses wins. |
+| **Crossword Clash** | [`games/crossword-clash/`](games/crossword-clash/) | Place words on a shared grid. Longer words score more. |
+| **Emoji Guess** | [`games/emoji-guess/`](games/emoji-guess/) | One player picks emojis, the other guesses the movie or phrase. |
+| **Equation Builder** | [`games/equation-builder/`](games/equation-builder/) | Build equations from number cards to reach the target. |
+| **Guess My Number** | [`games/guess-the-number-pass/`](games/guess-the-number-pass/) | Set a number 1-100. Rival guesses with hot/cold hints. |
+| **Hi-Lo Showdown** | [`games/higher-or-lower-showdown/`](games/higher-or-lower-showdown/) | Predict if the next number is higher or lower. Streak bonus. |
+| **Math Duel** | [`games/math-duel/`](games/math-duel/) | Solve equations to attack. Wrong answers let the rival hit you. |
+| **Memory Maze** | [`games/memory-maze/`](games/memory-maze/) | Memorize the maze path, then navigate it blind. Closest to goal wins. |
+| **Name That Tune** | [`games/name-that-tune/`](games/name-that-tune/) | Hum or tap the rhythm. Rival guesses the song. |
+| **Odd One Out Pass** | [`games/odd-one-out-pass/`](games/odd-one-out-pass/) | One tile is slightly different. Spot it before time runs out. |
+| **Odd or Even** | [`games/odd-or-even/`](games/odd-or-even/) | Hide fingers, guess odd or even. First to five correct wins. |
+| **Password** | [`games/password/`](games/password/) | Give one-word clues to help your partner guess the secret word. |
+| **Pattern Panic** | [`games/pattern-panic/`](games/pattern-panic/) | Repeat the pattern but add one. Miss it and your rival steals. |
+| **Pictionary** | [`games/pictionary-pass/`](games/pictionary-pass/) | Draw the word on screen. Rival guesses before time runs out. |
+| **Quick Math** | [`games/quick-math/`](games/quick-math/) | Rapid-fire arithmetic. Correct answer = point, wrong = lose one. |
+| **Story Builder** | [`games/story-builder/`](games/story-builder/) | Each adds a sentence to the story. Funniest ending wins. |
+| **Sudoku Duel** | [`games/sudoku-duel/`](games/sudoku-duel/) | Same puzzle, alternating cells. First to complete a row wins. |
+| **Trivia Clash** | [`games/trivia-clash/`](games/trivia-clash/) | Answer questions in turns. Steal if the other player misses. |
+| **20 Questions** | [`games/twenty-questions/`](games/twenty-questions/) | Think of something. Rival asks yes/no questions to guess it. |
+| **Word Chain** | [`games/word-chain/`](games/word-chain/) | Each word must start with the last letter of the previous. |
+| **Word Search Race** | [`games/word-search-race/`](games/word-search-race/) | Same grid, alternate finding words. First to spot scores. |
+| **Would You Rather** | [`games/would-you-rather/`](games/would-you-rather/) | Pick A or B. Match your rival's choice to score a point. |
+
+## The original 100 games
 
 ### ♟️ Board & Strategy (27)
 

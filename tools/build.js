@@ -36,7 +36,7 @@ function page(g) {
 <body>
 <script src="../../assets/js/games.js"></script>
 <script src="../../assets/js/core.js"></script>
-<script src="game.js"></script>
+${(g.libs || []).map((l) => `<script src="../../assets/js/${l}"></script>`).join('\n')}<script src="game.js"></script>
 </body>
 </html>
 `;

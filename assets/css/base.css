@@ -579,3 +579,11 @@ body.has-touch .gcanvas {
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }
+
+/* ---------- Fullscreen mode (⛶ button in the game topbar) ---------- */
+body.is-fs .topbar,
+body.is-fs .scoreboard,
+body.is-fs .hint { max-width: min(1500px, 98vw); }
+body.is-fs .stage { max-width: min(1500px, 98vw); padding-top: .5rem; }
+html:fullscreen,
+html:-webkit-full-screen { background: #0e1020; }
