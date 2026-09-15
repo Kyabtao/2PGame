@@ -324,6 +324,165 @@
     rect(ctx, x, y, w, hgt, color) { ctx.fillStyle = color; ctx.fillRect(x, y, w, hgt); },
     text(ctx, s, x, y, opts) { opts = opts || {}; ctx.fillStyle = opts.color || '#fff'; ctx.font = opts.font || 'bold 16px system-ui, sans-serif'; ctx.textAlign = opts.align || 'center'; ctx.textBaseline = opts.base || 'middle'; ctx.fillText(s, x, y); },
     roundRect(ctx, x, y, w, hgt, r, color) { ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + hgt, r); ctx.arcTo(x + w, y + hgt, x, y + hgt, r); ctx.arcTo(x, y + hgt, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath(); ctx.fillStyle = color; ctx.fill(); },
+    /** Filled circle with a ring (pucks, discs, pegs). */
+    disc(ctx, x, y, r, fill, ring) { UI.circle(ctx, x, y, r, fill); if (ring) { ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.lineWidth = 2; ctx.strokeStyle = ring; ctx.stroke(); } },
+    /**
+     * Tiny 2D disc field used by the flick / pool games: friction, cushion
+     * bounces and equal-mass elastic collisions. `discs` entries are
+     * {x, y, vx, vy, r, m, dead, tag}. Returns a mutable field object.
+     */
+    field(w, hgt, opts) {
+      opts = opts || {};
+      const f = {
+        w, h: hgt, discs: [],
+        friction: opts.friction == null ? 1.5 : opts.friction,   // exponential damping per second
+        wall: opts.wall == null ? 0.86 : opts.wall,              // restitution on the cushions
+        min: opts.min == null ? 4 : opts.min,                     // below this speed a disc is asleep
+        add(d) { this.discs.push(Object.assign({ vx: 0, vy: 0, r: 12, m: 1, dead: false }, d)); return this.discs[this.discs.length - 1]; },
+        live() { return this.discs.filter((d) => !d.dead); },
+        moving() { return this.discs.some((d) => !d.dead && (Math.abs(d.vx) > this.min || Math.abs(d.vy) > this.min)); },
+        stop() { this.discs.forEach((d) => { d.vx = 0; d.vy = 0; }); },
+        /** advance one step; returns the collision pairs that happened */
+        step(dt) {
+          const hits = [];
+          const ds = this.live();
+          for (const d of ds) {
+            d.x += d.vx * dt; d.y += d.vy * dt;
+            const k = Math.exp(-this.friction * dt);
+            d.vx *= k; d.vy *= k;
+            if (Math.abs(d.vx) < this.min && Math.abs(d.vy) < this.min) { d.vx = 0; d.vy = 0; }
+            if (d.x - d.r < 0) { d.x = d.r; d.vx = -d.vx * this.wall; opts.onWall && opts.onWall(d); }
+            if (d.x + d.r > this.w) { d.x = this.w - d.r; d.vx = -d.vx * this.wall; opts.onWall && opts.onWall(d); }
+            if (d.y - d.r < 0) { d.y = d.r; d.vy = -d.vy * this.wall; opts.onWall && opts.onWall(d); }
+            if (d.y + d.r > this.h) { d.y = this.h - d.r; d.vy = -d.vy * this.wall; opts.onWall && opts.onWall(d); }
+          }
+          for (let i = 0; i < ds.length; i++) for (let j = i + 1; j < ds.length; j++) {
+            const a = ds[i], b = ds[j];
+            const dx = b.x - a.x, dy = b.y - a.y, dd = Math.hypot(dx, dy), need = a.r + b.r;
+            if (!dd || dd > need) continue;
+            const nx = dx / dd, ny = dy / dd, push = (need - dd) / 2;
+            a.x -= nx * push; a.y -= ny * push; b.x += nx * push; b.y += ny * push;
+            const rel = (b.vx - a.vx) * nx + (b.vy - a.vy) * ny;
+            if (rel > 0) continue;
+            const imp = -(1 + (opts.rest == null ? 0.96 : opts.rest)) * rel / (1 / a.m + 1 / b.m);
+            a.vx -= (imp / a.m) * nx; a.vy -= (imp / a.m) * ny;
+            b.vx += (imp / b.m) * nx; b.vy += (imp / b.m) * ny;
+            hits.push([a, b]);
+          }
+          if (opts.onCollide && hits.length) opts.onCollide(hits);
+          return hits;
+        },
+        /** true when two discs are more than `gap` apart from every neighbour */
+        free(x, y, r, ignore) {
+          return !this.discs.some((d) => !d.dead && d !== ignore && Math.hypot(d.x - x, d.y - y) < d.r + r + 0.5);
+        },
+      };
+      return f;
+    },
+    /**
+     * Row of option buttons that can be re-rendered every turn.
+     * items: [{label | html, on, dis, cls, title, onClick}]  (null items are skipped)
+     */
+    chips(items, opts) {
+      opts = opts || {};
+      const el = h('div', { class: opts.cls || 'row wrap' });
+      const api = {
+        el,
+        set(list) {
+          el.innerHTML = '';
+          (list || []).forEach((it) => {
+            if (!it) return;
+            const b = h('button', {
+              class: 'chip' + (it.on ? ' on' : '') + (it.dis ? ' dis' : '') + (it.cls ? ' ' + it.cls : ''),
+              html: it.html != null ? it.html : esc(it.label == null ? '' : it.label),
+              title: it.title || undefined,
+            });
+            if (!it.dis && it.onClick) b.addEventListener('click', (e) => { e.preventDefault(); Sfx.play('click'); it.onClick(it, e); });
+            el.appendChild(b);
+          });
+        },
+      };
+      api.set(items);
+      return api;
+    },
+    /** Row of labelled number boxes: defs [{key, label, val}] → {el, set(key, val)} */
+    stats(defs) {
+      const map = {};
+      const el = h('div', { class: 'row wrap' }, defs.map((d) => h('div', { class: 'stat' },
+        map[d.key] = h('b', { text: d.val == null ? '—' : String(d.val) }), h('span', { text: d.label }))));
+      return { el, set(k, v) { if (map[k]) map[k].textContent = v == null ? '—' : String(v); }, get: (k) => map[k] };
+    },
+    /** All runs of `need` consecutive cells on a rows×cols grid, as flat indices. */
+    lines(rows, cols, need) {
+      const out = [];
+      for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) {
+        for (const [dr, dc] of [[0, 1], [1, 0], [1, 1], [1, -1]]) {
+          const line = [];
+          for (let k = 0; k < need; k++) {
+            const rr = r + dr * k, cc = c + dc * k;
+            if (rr < 0 || rr >= rows || cc < 0 || cc >= cols) { line.length = 0; break; }
+            line.push(rr * cols + cc);
+          }
+          if (line.length === need) out.push(line);
+        }
+      }
+      return out;
+    },
+    /**
+     * Oscillating marker used by aim/timing games. Drive it from g.loop(dt)
+     * (or g.every) and read `m.v` (0..1) when the player locks it in.
+     */
+    meter(opts) {
+      opts = opts || {};
+      const el = h('div', { class: 'meter' }, h('i'));
+      const mk = el.firstChild;
+      return {
+        el, el2: el, marker: mk, v: 0, dir: 1,
+        speed: opts.speed == null ? 0.75 : opts.speed,
+        set(v) { this.v = clamp(v, 0, 1); mk.style.left = (this.v * 100).toFixed(2) + '%'; return this.v; },
+        step(dt) { let v = this.v + this.dir * dt * this.speed; if (v > 1) { v = 2 - v; this.dir = -1; } else if (v < 0) { v = -v; this.dir = 1; } return this.set(v); },
+      };
+    },
+    /** Number keypad-style prompt helper: shows an input in a modal and resolves with the value. */
+    ask(g, opts) {
+      // opts: {label, value, min, max, pattern, unit, ok, cancel}
+      return new Promise((resolve) => {
+        let inp, done = false;
+        const finish = (v) => { if (done) return; done = true; off(); resolve(v); };
+        const body = (host) => {
+          const row = h('div', { class: 'col', style: { gap: '.5rem' } });
+          inp = h('input', {
+            type: opts.type || 'text', inputmode: opts.inputmode || 'text', autocomplete: 'off', spellcheck: false,
+            value: opts.value == null ? '' : String(opts.value),
+            maxlength: opts.maxlength || 24,
+            style: { font: 'inherit', fontSize: '1.5rem', padding: '.5rem .7rem', width: 'min(320px, 78vw)', textAlign: 'center', borderRadius: '10px', border: `2px solid ${g.color(g.current || 1)}`, background: 'var(--surface)', color: 'var(--text)' },
+          });
+          inp.addEventListener('keydown', (e) => { e.stopPropagation(); if (e.key === 'Enter') { e.preventDefault(); submit(); } });
+          row.appendChild(inp);
+          if (opts.hint) row.appendChild(h('div', { class: 'muted', style: { fontSize: '.85rem' }, html: opts.hint }));
+          row.appendChild(h('div', { class: 'row' },
+            h('button', { class: 'btn primary', text: opts.ok || 'OK', onclick: submit }),
+            opts.cancel ? h('button', { class: 'btn ghost', text: opts.cancel, onclick: () => finish(null) }) : null));
+          host.appendChild(row);
+          setTimeout(() => { try { inp.focus(); inp.select && inp.select(); } catch (e) { /* ignore */ } }, 30);
+        };
+        const submit = () => {
+          const raw = (inp.value || '').trim();
+          if (opts.pattern && !opts.pattern.test(raw)) { g.sfx('bad'); inp.classList.add('shake'); setTimeout(() => inp.classList.remove('shake'), 320); return; }
+          if (opts.numeric) {
+            const v = parseFloat(raw);
+            if (!isFinite(v)) { g.sfx('bad'); return; }
+            if (opts.min != null && v < opts.min) { g.sfx('bad'); return; }
+            if (opts.max != null && v > opts.max) { g.sfx('bad'); return; }
+            return finish(v);
+          }
+          finish(raw);
+        };
+        g.modal({ cls: 'ask', title: opts.label || '', html: opts.text, body, dismiss: !!opts.cancel });
+        // Esc / outside click cancel
+        const off = Input.onKey('Escape', () => finish(opts.cancel ? null : undefined));
+      });
+    },
   };
 
   /* ------------------------------------------------------------------- Game */
@@ -342,6 +501,32 @@
       if (!link) { link = document.createElement('link'); link.rel = 'icon'; document.head.appendChild(link); }
       link.href = 'data:image/svg+xml,' + encodeURIComponent(svg);
     } catch (e) { /* ignore */ }
+  }
+
+  /* ---- fullscreen (topbar ⛶ button, every game page) ---- */
+  function fsSupported() {
+    return !!(document.documentElement.requestFullscreen || document.documentElement.webkitRequestFullscreen);
+  }
+  function fsElement() { return document.fullscreenElement || document.webkitFullscreenElement || null; }
+  function installFullscreen(els) {
+    if (!els.fsBtn || !fsSupported()) return;
+    const sync = () => {
+      const on = !!fsElement();
+      document.body.classList.toggle('is-fs', on);
+      els.fsBtn.textContent = on ? '🗗' : '⛶';
+      els.fsBtn.title = on ? 'Exit fullscreen' : 'Fullscreen';
+    };
+    ['fullscreenchange', 'webkitfullscreenchange'].forEach((ev) => document.addEventListener(ev, sync));
+    els.fsBtn.addEventListener('click', () => {
+      if (fsElement()) {
+        const exit = document.exitFullscreen || document.webkitExitFullscreen;
+        if (exit) { const p = exit.call(document); if (p && p.catch) p.catch(() => {}); }
+      } else {
+        const root = document.documentElement;
+        const req = root.requestFullscreen || root.webkitRequestFullscreen;
+        if (req) { const p = req.call(root); if (p && p.catch) p.catch(() => {}); }
+      }
+    });
   }
 
   /**
@@ -373,7 +558,9 @@
         els.rulesBtn = h('button', { class: 'btn icon', title: 'Rules & controls', text: '?' }),
         els.soundBtn = h('button', { class: 'btn icon', title: 'Sound on/off' }),
         els.padBtn = h('button', { class: 'btn icon', title: 'Touch controls', text: '🎮', hidden: !opts.pad }),
+        els.fsBtn = h('button', { class: 'btn icon', title: 'Fullscreen', text: '⛶', hidden: !fsSupported() }),
         els.restartBtn = h('button', { class: 'btn icon', title: 'Restart round', text: '↻' })));
+    installFullscreen(els);
     const mkPlayer = (p) => {
       const input = h('input', { class: 'pname', value: names[p - 1], maxlength: 16, 'aria-label': `Player ${p} name`, spellcheck: false });
       input.addEventListener('change', () => { names[p - 1] = input.value.trim() || `Player ${p}`; input.value = names[p - 1]; Store.setPlayers(names); refreshBoard(); if (state.turn) api.turn(state.turn); });

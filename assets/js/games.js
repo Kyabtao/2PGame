@@ -11,7 +11,7 @@ window.GAMES = [
   { id: 'tic-tac-toe', title: 'Tic-Tac-Toe', emoji: '❌', cat: 'board', mode: 'turn', mobile: true, desc: 'Three in a row wins. The classic, with a series scoreboard.' },
   { id: 'connect-four', title: 'Connect Four', emoji: '🔴', cat: 'board', mode: 'turn', mobile: true, desc: 'Drop discs into the grid and line up four before your rival.' },
   { id: 'checkers', title: 'Checkers', emoji: '⚫', cat: 'board', mode: 'turn', mobile: true, desc: 'Jump, capture and crown kings on the 8×8 board. Mandatory captures.' },
-  { id: 'chess', title: 'Chess', emoji: '♟️', cat: 'board', mode: 'turn', mobile: true, desc: 'Full rules: castling, en passant, promotion, check and checkmate.' },
+  { id: 'chess', title: 'Chess', emoji: '♟️', cat: 'board', mode: 'turn', mobile: true, libs: ['chess-rules.js'], desc: 'Full rules: castling, en passant, promotion, check and checkmate.' },
   { id: 'othello', title: 'Othello', emoji: '⚪', cat: 'board', mode: 'turn', mobile: true, desc: 'Flank and flip discs. Most discs when the board fills wins.' },
   { id: 'gomoku', title: 'Gomoku', emoji: '⚫', cat: 'board', mode: 'turn', mobile: true, desc: 'Five in a row on a 15×15 board. Simple rules, deep tactics.' },
   { id: 'dots-and-boxes', title: 'Dots & Boxes', emoji: '📦', cat: 'board', mode: 'turn', mobile: true, desc: 'Draw lines, close boxes, take extra turns. Most boxes wins.' },
@@ -152,7 +152,7 @@ window.GAMES = [
   { id: 'would-you-rather', title: 'Would You Rather', emoji: '🤷', cat: 'brain', mode: 'pass', mobile: true, desc: 'Pick A or B. Match your rival\'s choice to score a point.' },
   { id: 'tic-tac-toe-blind', title: 'Blind Tic-Tac-Toe', emoji: '🙈', cat: 'board', mode: 'pass', mobile: true, desc: 'Place marks without seeing the board. Reveal at the end.' },
   { id: 'connect-four-blind', title: 'Blind Connect Four', emoji: '🙈', cat: 'board', mode: 'pass', mobile: true, desc: 'Drop discs blind. Only reveals when someone claims four.' },
-  { id: 'chess-blind', title: 'Blind Chess', emoji: '♟️', cat: 'board', mode: 'pass', mobile: true, desc: 'Call out moves without seeing the board. Checkmate to win.' },
+  { id: 'chess-blind', title: 'Blind Chess', emoji: '♟️', cat: 'board', mode: 'pass', mobile: true, libs: ['chess-rules.js'], desc: 'Call out moves without seeing the board. Checkmate to win.' },
   { id: 'dominoes-pass', title: 'Dominoes Pass', emoji: '🁣', cat: 'cards', mode: 'pass', mobile: true, desc: 'Hidden domino hands. Match pips, block your rival. Pass to hide.' },
 
   /* ------------------------------------------------ Pass-the-Device Games (second — great for mobile) */
