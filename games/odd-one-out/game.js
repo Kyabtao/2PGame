@@ -14,7 +14,7 @@
       g.stage.append(who, msg, holder);
       const build = () => {
         n++; const lvl = score[1] + score[2]; const N = clamp(4 + Math.floor(lvl / 2), 4, 8); const [a, b] = pick(SETS); const flip = Math.random() < 0.5; odd = rnd(N * N);
-        holder.innerHTML = ''; const size = Math.floor(clamp((Math.min(window.innerWidth, 560) - 30) / N, 34, 64));
+        holder.innerHTML = ''; const size = UI.fit(N, N, 4);
         grid = UI.grid({ rows: N, cols: N, size, gap: 4, onClick: (r, c, cell, ev) => tap(r * N + c, ev) });
         grid.each((cell, r, c) => { cell.textContent = (r * N + c === odd) !== flip ? b : a; cell.style.fontSize = 'calc(var(--cell) * .62)'; cell.style.background = 'var(--surface2)'; });
         holder.appendChild(grid.el); locked = { 1: false, 2: false }; busy = false; msg.textContent = `Board ${n} · find the odd one`; g.points(score[1], score[2]);

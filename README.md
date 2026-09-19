@@ -5,7 +5,8 @@ One hundred and eighty-nine local two-player games (same device, same keyboard o
 - **189 games** across five categories: board & strategy, arcade & action, sports & reflex, cards & dice, brain & party.
 - **Interactive screen for every game** — canvas action games, SVG boards, DOM card tables, with keyboard *and* touch controls (an on-screen pad appears on phones/tablets).
 - **Scores saved in the browser** — series wins, draws, streaks, personal bests and match history, all per game, all in `localStorage`. Nothing leaves the device.
-- **Fullscreen play** — every game's top bar has an **⛶** button that expands the game to the full screen (it flips to 🗗 to leave); unsupported browsers simply don't show it.
+- **Fullscreen play** — every game's top bar has an **⛶** button that expands the game to the full screen (it flips to 🗗 to leave); unsupported browsers simply don't show it. The hub's **⛶ Fullscreen** switch makes every game you open start fullscreen on your first tap, and in fullscreen the title bar, scoreboard, hint line and buttons shrink to one slim row so the board gets the whole screen.
+- **Boards that fill the screen** — boards are sized from the room the page actually leaves for them (measured live, not guessed), so a chessboard is as big as the screen allows on a phone, a laptop or a fullscreen TV, and re-fits instantly on rotate, resize or fullscreen.
 - **Everything connected** — a hub (`index.html`) lists, searches and filters all games; every game links back to the hub; player names set once are used everywhere.
 - **Shared assets** — one design system (`assets/css/base.css`) and one game engine (`assets/js/core.js`) power all 189 games. A typical game is a single ~60–150 line `game.js`.
 
@@ -77,7 +78,7 @@ index.html ──loads──▶ assets/js/games.js (manifest)  ◀──loads─
 | Key | Contents |
 |-----|----------|
 | `2pgame:players` | `["Player 1 name", "Player 2 name"]` |
-| `2pgame:settings` | `{ sound, pad, … }` and per-game preferences |
+| `2pgame:settings` | `{ sound, pad, fullscreen, … }` — `fullscreen: 'on'` makes game pages ask for fullscreen on the first tap |
 | `2pgame:score:<game-id>` | `{ w: [p1Wins, p2Wins], d: draws, n: gamesPlayed, last: [ …recent results ], streak: { p, n }, best: { key: { v, p } } }` |
 
 ## Controls
@@ -137,7 +138,8 @@ Turn-based games are played with the mouse or by tapping. Hidden-information gam
 | `g.loop(fn(dt))`, `g.after(ms, fn)`, `g.every(ms, fn)`, `g.countdown(3)`, `g.pass(p, text)` | Timing helpers, all cleaned up at round end. |
 | `g.best(key, value, p, lower)`, `g.getBest(key)` | Personal-best tracking (e.g. fastest reaction time). |
 | `g.modal({...})`, `g.toast(text)`, `g.sfx(name)` | Dialogs, toasts and synthesised sound effects. |
-| `UI.grid`, `UI.canvas`, `UI.pointer`, `UI.deck`, `UI.card`, `UI.die` | Board grids, HiDPI canvas + pointer mapping, playing cards, dice. |
+| `UI.grid`, `UI.fit`, `UI.canvas`, `UI.pointer`, `UI.deck`, `UI.card`, `UI.die` | Board grids, board fitting, HiDPI canvas + pointer mapping, playing cards, dice. |
+| `g.fullscreen()`, `g.isFullscreen`, `g.relayout()` | Enter/leave fullscreen, check it, or re-fit auto-sized grids after building a custom layout. |
 | `h(tag, attrs, ...children)`, `rnd`, `pick`, `shuffle`, `clamp`, `sleep`, `esc`… | Small DOM and maths helpers exposed globally. |
 
 ## Development

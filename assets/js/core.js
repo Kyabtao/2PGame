@@ -223,21 +223,92 @@
   /* --------------------------------------------------------------------- UI */
   const SUITS = ['♠', '♥', '♦', '♣'];
   const RANKS = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
+
+  /* ---- how much room is there for a board? ----
+     Measured from the live page instead of guessed constants: the topbar and
+     scoreboard sit above the stage, the hint bar (and the touch pad) below it,
+     and the stage may already hold captions or score rows. Boards that only
+     know the viewport end up tiny in fullscreen, where the chrome is
+     proportionally huge — this keeps every board as big as it can be. */
+  function stageSpace() {
+    const hOf = (sel, dflt) => {
+      const el = document.querySelector(sel);
+      if (!el || el.hidden) return dflt;
+      return el.getBoundingClientRect().height || dflt;
+    };
+    const pad = document.body.classList.contains('has-touch') ? 168 : 0;   // touch controls
+    const below = hOf('.hint', 38) + 12 + pad;
+    // Where the board area really starts. The stage is the truth: the topbar
+    // and scoreboard sit above it, and in fullscreen the chrome shrinks.
+    const stage = document.getElementById('stage');
+    const above = stage ? Math.max(0, stage.getBoundingClientRect().top)
+                        : hOf('.topbar', 56) + hOf('.scoreboard', 92) + 14;
+    let taken = 0;                                                          // other stage content
+    if (stage) {
+      for (const kid of stage.children) {
+        if (kid.classList.contains('grid') || kid.classList.contains('gcanvas') || kid.classList.contains('gsvg')) continue;
+        const r = kid.getBoundingClientRect();
+        if (r.height) taken += r.height + 12;
+      }
+    }
+    const avail = Math.max(140, global.innerHeight - above - below);
+    // Share the screen with the game's own controls, but never squash the
+    // board into a thumbnail — if both can't fit, the page scrolls instead.
+    const h = Math.min(avail, Math.max(avail - taken, Math.min(240, avail)));
+    const maxW = Math.min(global.innerWidth, 1200) - 44;                     // stage padding + page gutter
+    return { w: Math.max(140, maxW), h };
+  }
+
+  /* Grids created without an explicit `size` follow the viewport on their own:
+     resizing, rotating or entering fullscreen resizes the board in place —
+     no game re-render needed, the cells are sized by --cell. */
+  const autoGrids = [];
+  let relayoutQueued = false;
+  function relayoutGrids() {
+    relayoutQueued = false;
+    // Short viewports (landscape phones) use the compact chrome — also after
+    // the device is rotated while a round is running.
+    document.body.classList.toggle('slim', global.innerHeight < 560);
+    const sp = stageSpace();
+    for (let i = autoGrids.length - 1; i >= 0; i--) {
+      const g = autoGrids[i];
+      if (!g.el.isConnected) { autoGrids.splice(i, 1); continue; }   // board from an earlier round
+      const pad = 12;                                                       // .grid padding
+      const fit = Math.min((sp.w - pad - (g.cols - 1) * g.gap) / g.cols, (sp.h - pad - (g.rows - 1) * g.gap) / g.rows);
+      const size = Math.floor(clamp(fit, Math.min(15, fit), 110));
+      if (size !== g.size) { g.size = size; g.el.style.setProperty('--cell', size + 'px'); }
+    }
+  }
+  function queueRelayout() {
+    if (relayoutQueued || !autoGrids.length) return;
+    relayoutQueued = true;
+    requestAnimationFrame(relayoutGrids);
+    setTimeout(relayoutGrids, 260);     // fallback: rAF is throttled in hidden tabs
+  }
+  ['resize', 'orientationchange'].forEach((ev) => global.addEventListener(ev, queueRelayout));
+  document.addEventListener('fullscreenchange', () => setTimeout(queueRelayout, 60));
+  document.addEventListener('webkitfullscreenchange', () => setTimeout(queueRelayout, 60));
+
   const UI = {
     h,
+    /** Largest cell size (px) that keeps a rows×cols board fully on screen. */
+    fit(rows, cols, gap) {
+      const g = gap == null ? 4 : gap;
+      const sp = stageSpace();
+      const fit = Math.min((sp.w - 12 - (cols - 1) * g) / cols, (sp.h - 12 - (rows - 1) * g) / rows);
+      return Math.floor(clamp(fit, Math.min(15, fit), 110));
+    },
     /** Board grid. opts: {rows, cols, size(px), gap, checker, onClick(r,c,el,ev), cls} */
     grid(opts) {
       const { rows, cols } = opts;
-      // Fit the board to the viewport: account for gaps + grid padding, and
-      // allow smaller cells on phones (min 15px) so wide boards (15×15 etc.)
-      // never overflow horizontally.
+      // Fit the board to the space the page actually leaves for it, with a
+      // smaller gap for dense boards so wide grids (15×15 etc.) still fit.
       let gap = opts.gap == null ? 4 : opts.gap;
-      const fit = (gp) => Math.min(
-        (global.innerWidth - 24 - 12 - (cols - 1) * gp) / cols,
-        (global.innerHeight - 300 - 12 - (rows - 1) * gp) / rows);
-      if (opts.gap == null && fit(gap) < 20) gap = 2;
-      const size = opts.size || Math.floor(clamp(fit(gap), 15, 72));
-      const el = h('div', { class: 'grid ' + (opts.cls || ''), style: { gridTemplateColumns: `repeat(${cols}, ${size}px)`, '--cell': size + 'px', gap: gap + 'px' } });
+      if (opts.gap == null && UI.fit(rows, cols, gap) < 20) gap = 2;
+      const size = opts.size || UI.fit(rows, cols, gap);
+      const el = h('div', { class: 'grid ' + (opts.cls || ''), style: { gridTemplateColumns: `repeat(${cols}, var(--cell))`, gridTemplateRows: `repeat(${rows}, var(--cell))`, gap: gap + 'px' } });
+      el.style.setProperty('--cell', size + 'px');
+      if (!opts.size) autoGrids.push({ el, rows, cols, gap, size });
       const cells = [];
       for (let r = 0; r < rows; r++) {
         cells.push([]);
@@ -508,6 +579,15 @@
     return !!(document.documentElement.requestFullscreen || document.documentElement.webkitRequestFullscreen);
   }
   function fsElement() { return document.fullscreenElement || document.webkitFullscreenElement || null; }
+  function requestFs() {
+    const root = document.documentElement;
+    const req = root.requestFullscreen || root.webkitRequestFullscreen;
+    if (req) { const p = req.call(root); if (p && p.catch) p.catch(() => {}); }
+  }
+  function exitFs() {
+    const exit = document.exitFullscreen || document.webkitExitFullscreen;
+    if (exit) { const p = exit.call(document); if (p && p.catch) p.catch(() => {}); }
+  }
   function installFullscreen(els) {
     if (!els.fsBtn || !fsSupported()) return;
     const sync = () => {
@@ -585,6 +665,10 @@
       if (opts.controls.p2) hintParts.push(h('span', { class: 'c2', html: `<b>${esc(names[1])}</b>: ${opts.controls.p2}` }));
     }
     const hint = h('footer', { class: 'hint' }, hintParts);
+    document.body.classList.add('game');
+    // Short viewports (landscape phones) need the compact chrome: the board
+    // would otherwise be squeezed away by the scoreboard.
+    if (global.innerHeight < 560) document.body.classList.add('slim');
     document.body.append(top, board, stage, hint);
 
     /* ---- sound button ---- */
@@ -600,6 +684,7 @@
       if (state.padEl) state.padEl.hidden = !on;
       document.body.classList.toggle('has-touch', on);
       els.padBtn.classList.toggle('on', on);
+      setTimeout(queueRelayout, 0);       // the pad takes room: boards re-fit
     };
     els.padBtn.addEventListener('click', () => { const on = !state.padOn; Store.setSettings({ pad: on ? 'on' : 'off' }); setPad(on); });
     const padPref = Store.settings().pad;
@@ -812,11 +897,32 @@
       sfx: (n) => Sfx.play(n),
       showPad: setPad,
       record: () => Store.score(meta.id),
+      /** Fullscreen helpers — Boards re-fit themselves automatically. */
+      fullscreen() { if (fsElement()) exitFs(); else requestFs(); },
+      get isFullscreen() { return !!fsElement(); },
+      /** Re-fit every auto-sized board (after building custom layout, etc.). */
+      relayout: queueRelayout,
     };
 
     els.rulesBtn.addEventListener('click', () => showRules(false));
     els.restartBtn.addEventListener('click', () => { if (!state.started) return; if (state.over || confirm('Restart the current round?')) begin(); });
     Input.onKey('KeyR', (c, e) => { if (e.ctrlKey || e.metaKey || e.altKey) return; });
+
+    /* ---- start the game fullscreen when asked to ----
+       ?fs=1 (or the hub's fullscreen switch) enters fullscreen on the first
+       tap / key press — the same gesture that dismisses the intro screen, so
+       the browser is happy and the round starts on a full screen. */
+    const fsParam = qs.get('fs');
+    const wantFs = fsParam == null ? Store.settings().fullscreen === 'on' : fsParam === '1';
+    if (wantFs && fsSupported() && !fsElement()) {
+      const arm = () => {
+        global.removeEventListener('pointerdown', arm, true);
+        global.removeEventListener('keydown', arm, true);
+        if (!fsElement()) requestFs();
+      };
+      global.addEventListener('pointerdown', arm, true);
+      global.addEventListener('keydown', arm, true);
+    }
 
     if (opts.autoStart) begin(); else showRules(true);
     return api;

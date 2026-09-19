@@ -9,7 +9,7 @@
     onStart(g) {
       const R = 12, C = 12, M = 30, TARGET = Math.floor(M / 2) + 1;
       const flags = { 1: 0, 2: 0 }; let turn = starter, mines = null, open = range(R).map(() => Array(C).fill(false)), owner = range(R).map(() => Array(C).fill(0));
-      const size = Math.floor(clamp((Math.min(window.innerWidth, 560) - 30) / C, 24, 44));
+      const size = UI.fit(R, C, 2);              // 12x12 field, sized to the screen
       const grid = UI.grid({ rows: R, cols: C, size, gap: 2, onClick: (r, c) => reveal(r, c) });
       grid.each((cell) => { cell.style.background = 'var(--surface2)'; cell.style.fontWeight = 800; cell.style.fontSize = 'calc(var(--cell) * .5)'; });
       g.stage.appendChild(grid.el);
