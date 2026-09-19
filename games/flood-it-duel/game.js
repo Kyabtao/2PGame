@@ -11,7 +11,7 @@
       const N = 14; const board = range(N).map(() => range(N).map(() => rnd(6))); const own = range(N).map(() => Array(N).fill(0));
       own[0][0] = 1; own[N - 1][N - 1] = 2; if (board[0][0] === board[N - 1][N - 1]) board[N - 1][N - 1] = (board[N - 1][N - 1] + 1) % 6;
       let turn = starter;
-      const size = Math.floor(clamp((Math.min(window.innerWidth, 520) - 30) / N, 18, 34));
+      const size = UI.fit(N, N, 1);              // 14x14 board, sized to the screen
       const grid = UI.grid({ rows: N, cols: N, size, gap: 1, cls: 'static' });
       const btns = h('div', { class: 'row' }); g.stage.append(grid.el, btns);
       const colorOf = (p) => { for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) if (own[r][c] === p) return board[r][c]; return -1; };

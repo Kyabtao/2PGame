@@ -580,10 +580,59 @@ body.has-touch .gcanvas {
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }
 
-/* ---------- Fullscreen mode (⛶ button in the game topbar) ---------- */
+/* ---------- Fullscreen mode (⛶ button in the game topbar) ----------
+   Fullscreen is a game-only mode: the decorative title bar and the hint line
+   shrink to one slim row so the board gets almost the whole screen. */
 body.is-fs .topbar,
 body.is-fs .scoreboard,
 body.is-fs .hint { max-width: min(1500px, 98vw); }
 body.is-fs .stage { max-width: min(1500px, 98vw); padding-top: .5rem; }
+
+body.is-fs.game { display: flex; flex-direction: column; }
+body.is-fs.game .topbar,
+body.is-fs.game .scoreboard { width: 100%; }   /* auto margins would shrink them otherwise */
+body.is-fs.game .topbar { padding: .3rem .5rem; gap: .35rem; }
+body.is-fs.game .topbar .title { display: none; }   /* the board is the title */
+body.is-fs.game .topbar .actions { margin-left: auto; gap: .25rem; }
+body.is-fs.game .topbar .btn.icon { width: 32px; height: 32px; font-size: .9rem; }
+body.is-fs.game .topbar .btn.back { min-height: 32px; padding: .2rem .5rem; }
+body.is-fs.game .scoreboard { padding: 0 .5rem; gap: .4rem; }
+body.is-fs.game .player { padding: .25rem .5rem; border-radius: 10px; }
+body.is-fs.game .player .label,
+body.is-fs.game .player.active::after,
+body.is-fs.game .scoreboard .draws { display: none; }
+body.is-fs.game .player .wins { font-size: 1.2rem; }
+body.is-fs.game .scoreboard .mid { min-width: 90px; gap: 0; }
+body.is-fs.game .scoreboard .status { font-size: .85rem; }
+body.is-fs.game .scoreboard .points { font-size: 1.1rem; }
+body.is-fs.game .stage { flex: 1 1 auto; margin: .35rem auto; min-height: 0; }
+body.is-fs.game .hint { padding: 0 .6rem .35rem; font-size: .72rem; gap: .9rem; }
+body.is-fs.game .hint span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 46vw; }
+/* Landscape phones: every pixel above the board costs cell size. */
+@media (max-height: 560px) {
+  body.is-fs.game .topbar { padding: .12rem .4rem; }
+  body.is-fs.game .topbar .btn.icon { width: 28px; height: 28px; font-size: .8rem; }
+  body.is-fs.game .topbar .btn.back { min-height: 28px; padding: .1rem .4rem; font-size: .85rem; }
+  body.is-fs.game .player { padding: .15rem .45rem; }
+  body.is-fs.game .player .wins { font-size: 1rem; }
+  body.is-fs.game .scoreboard .status { font-size: .8rem; }
+}
+body.is-fs.game .touchpad { padding: .3rem; }
 html:fullscreen,
 html:-webkit-full-screen { background: #0e1020; }
+
+/* ---------- Compact layout (body.slim, or narrow/short screens) ----------
+   The page still scrolls, but the board starts higher up instead of being
+   pushed down by roomy scoreboard chrome — on a landscape phone (short
+   viewport) every pixel above the board costs cell size. */
+body.slim .topbar { padding: .4rem .6rem; }
+body.slim .topbar .title { font-size: 1.05rem; }
+body.slim .scoreboard { padding: 0 .6rem; gap: .45rem; }
+body.slim .player { padding: .3rem .6rem; }
+body.slim .player .wins { font-size: 1.35rem; }
+body.slim .stage { margin: .55rem auto; }
+body.slim .hint { padding: .35rem .6rem .9rem; font-size: .78rem; }
+
+@media (max-width: 640px) {
+  body.slim .topbar .back span { display: none; }
+}

@@ -10,7 +10,7 @@
     points: true,
     onStart(g) {
       const pos = { 1: 0, 2: 0 }; let turn = starter, busy = false;
-      const size = Math.floor(clamp((Math.min(window.innerWidth, 540) - 30) / 10, 28, 50));
+      const size = UI.fit(10, 10, 2);            // 10x10 board, sized to the screen
       const grid = UI.grid({ rows: 10, cols: 10, size, gap: 2, cls: 'static' });
       grid.each((cell, r, c) => { const row = 9 - r; const n = row * 10 + (row % 2 === 0 ? c + 1 : 10 - c); cell.dataset.n = n; cell.style.fontSize = '.65rem'; cell.style.alignItems = 'flex-start'; cell.style.justifyContent = 'flex-start'; cell.style.padding = '2px'; cell.style.background = (r + c) % 2 ? 'var(--surface2)' : 'var(--surface)'; cell.innerHTML = `<span class="muted">${n}</span>`; if (SNAKES[n]) { cell.innerHTML += `<span style="position:absolute;right:2px;bottom:1px;font-size:.9rem" title="to ${SNAKES[n]}">🐍</span>`; cell.style.background = '#4a2020'; } if (LADDERS[n]) { cell.innerHTML += `<span style="position:absolute;right:2px;bottom:1px;font-size:.9rem" title="to ${LADDERS[n]}">🪜</span>`; cell.style.background = '#1f4a2a'; } cell.style.position = 'relative'; });
       const die = UI.die(1); const rollBtn = h('button', { class: 'btn primary big', text: '🎲 Roll (Space)', onclick: roll }); const msg = h('div', { class: 'muted' });

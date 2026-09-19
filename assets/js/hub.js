@@ -174,6 +174,33 @@
   search.addEventListener('input', () => { query = search.value; renderGames(); });
   window.addEventListener('keydown', (e) => { if (e.key === '/' && document.activeElement !== search && !/INPUT/.test(document.activeElement.tagName)) { e.preventDefault(); search.focus(); } });
 
+  /* ---- tiny toast ---- */
+  let toastEl = null;
+  function toast(text) {
+    if (toastEl) toastEl.remove();
+    toastEl = h('div', { class: 'toast', text });
+    document.body.appendChild(toastEl);
+    setTimeout(() => { if (toastEl) { toastEl.remove(); toastEl = null; } }, 2200);
+  }
+
+  /* ---- fullscreen switch ----
+     Turned on, every game page asks for fullscreen on its first tap and
+     shrinks its chrome to one slim row, so the whole screen is the board. */
+  const fsBtn = $('#fullscreen');
+  const syncFsBtn = () => {
+    const on = Store.settings().fullscreen === 'on';
+    fsBtn.classList.toggle('on', on);
+    fsBtn.title = on ? 'Games start fullscreen — click to turn off' : 'Start every game in fullscreen';
+    fsBtn.innerHTML = '⛶<span class="hide-sm"> Fullscreen</span>' + (on ? ' <b>ON</b>' : '');
+  };
+  fsBtn.addEventListener('click', () => {
+    const on = Store.settings().fullscreen !== 'on';
+    Store.setSettings({ fullscreen: on ? 'on' : 'off' });
+    syncFsBtn();
+    toast(on ? '⛶ Fullscreen on — games now fill the screen' : '⛶ Fullscreen off');
+  });
+  syncFsBtn();
+
   /* ---- random game ---- */
   $('#random').addEventListener('click', () => {
     // Prefer turn-based games for random pick on mobile

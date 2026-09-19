@@ -10,7 +10,7 @@
     onStart(g) {
       const N = 6; const pool = shuffle(EMO).slice(0, N * N / 2); const cards = shuffle([...pool, ...pool]);
       const pairs = { 1: 0, 2: 0 }; let turn = starter, open = [], lock = false; const found = new Set();
-      const grid = UI.grid({ rows: N, cols: N, size: Math.floor(clamp((Math.min(window.innerWidth, 560) - 40) / N, 44, 80)), gap: 6, onClick: (r, c, cell) => flip(r * N + c, cell) });
+      const grid = UI.grid({ rows: N, cols: N, size: UI.fit(N, N, 6), gap: 6, onClick: (r, c, cell) => flip(r * N + c, cell) });
       grid.each((cell) => { cell.classList.add('tile'); cell.style.fontSize = 'calc(var(--cell) * .6)'; cell.style.background = 'var(--surface2)'; cell.textContent = '❔'; cell.style.color = 'var(--muted)'; });
       g.stage.appendChild(grid.el);
       const status = () => g.turn(turn, `<span class="pc${turn}">${esc(g.name(turn))}</span> · ${18 - found.size / 2} pairs left`);
